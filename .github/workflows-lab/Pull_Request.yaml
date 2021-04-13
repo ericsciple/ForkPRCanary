@@ -10,39 +10,31 @@ on:
     - lab.log
     - log
 
-
+env:
+  JOB_SECONDS: 5
 jobs:
-  build:
+  build-default:
     runs-on: ubuntu-latest
-
     steps:
-    # We should use workflow file from the fork repo and not the base repo.
-    - uses: notexist/notexist@vnotexist
-      
-    - uses: actions/checkout@v2
-    
-    # check GITHUB_TOKEN has write permission
-    - run: |
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
-        git fetch origin
-        git checkout main
-        git pull
-        echo ${{github.sha}} >> ${{github.sha}}.txt
-        git add .
-        git commit -am "${{github.sha}}"
-        git push
-      continue-on-error: true
-      id: git
-      name: check GITHUB_TOKEN permission
-    - run: |
-        fail the step
-      if: steps.git.outcome != 'failure'
-    # check we don't have secrets
-    - run: |
-        echo "::set-output name=test::${{secrets.test}}"
-      id: secret
-      name: check secrets context
-    - run: |
-        fail the step
-      if: steps.secret.outputs.test == 'password123!@#'
+      - run: ping -c ${{ env.JOB_SECONDS }} 127.0.0.1
+  build-default-2:
+    needs: build-default
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi
+
+  build-override:
+    permissions:
+      issues: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: ping -c ${{ env.JOB_SECONDS }} 127.0.0.1
+  build-override-2:
+    needs: build-override
+    permissions:
+      issues: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi
